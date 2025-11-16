@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: aternos-bot
+    env: node
+    buildCommand: |
+      npm install
+      apt-get update && apt-get install -y chromium chromium-driver
+    startCommand: node script.js
+    envVars:
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: ATERNOS_USERNAME
+        sync: false
+      - key: ATERNOS_PASSWORD
+        sync: false

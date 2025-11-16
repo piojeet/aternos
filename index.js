@@ -2,6 +2,9 @@ import puppeteer from "puppeteer";
 import dotenv from "dotenv";
 dotenv.config();
 
+// Render.com ke liye Chrome path
+const CHROME_PATH = process.env.CHROME_PATH || '/usr/bin/google-chrome';
+
 // Helper function to wait
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -55,8 +58,16 @@ const findButton = async (page, texts) => {
 
 (async () => {
   const browser = await puppeteer.launch({ 
-    headless: false, 
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    headless: "new",  // Render pe headless mode required
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || CHROME_PATH,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--disable-gpu",
+      "--window-size=1920x1080"
+    ],
     defaultViewport: { width: 1280, height: 800 }
   });
   const page = await browser.newPage();

@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "chrome-aws-lambda": "^10.1.0",
     "puppeteer": "^24.30.0"
   }
 }
