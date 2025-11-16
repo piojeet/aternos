@@ -17,7 +17,7 @@ const findButton = async (page, texts) => {
           return content.includes(searchText.toLowerCase());
         });
       }, text);
-      
+
       if (button) {
         const element = await page.evaluateHandle((txt) => {
           const btns = Array.from(document.querySelectorAll('button, a[role="button"], div[role="button"]'));
@@ -36,7 +36,7 @@ const findButton = async (page, texts) => {
       '#restart-button',
       '#start-button'
     ];
-    
+
     for (const selector of classPatterns) {
       const btn = await page.$(selector);
       if (btn) return btn;
@@ -54,9 +54,10 @@ const findButton = async (page, texts) => {
 };
 
 (async () => {
-  const browser = await puppeteer.launch({ 
-    headless: false, 
+  const browser = await puppeteer.launch({
+    headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
     defaultViewport: { width: 1280, height: 800 }
   });
   const page = await browser.newPage();
@@ -80,7 +81,7 @@ const findButton = async (page, texts) => {
 
   console.log("✅ Login successful");
   await wait(5000);
-  
+
   console.log("📌 Server page load ho raha hai...");
   console.log("🔄 Auto-restart monitoring shuru...\n");
 
@@ -95,13 +96,13 @@ const findButton = async (page, texts) => {
         /Players?:\s*(\d+)/i,          // "Players: 0"
         /Online:\s*(\d+)/i             // "Online: 0"
       ];
-      
+
       const bodyText = document.body.innerText;
       for (const pattern of patterns) {
         const match = bodyText.match(pattern);
         if (match) return match[1];
       }
-      
+
       // Check specific elements
       const selectors = ['.players', '.player-count', '[class*="player"]'];
       for (const sel of selectors) {
@@ -112,7 +113,7 @@ const findButton = async (page, texts) => {
           if (match) return match[1];
         }
       }
-      
+
       return "0";
     }).catch(() => "0");
 
@@ -133,14 +134,14 @@ const findButton = async (page, texts) => {
     // Parse timer
     let timerDisplay = "N/A";
     let secondsRemaining = null;
-    
+
     if (timer) {
       const match = timer.match(/^(\d{1,2}):(\d{2})$/);
       if (match) {
         const minutes = parseInt(match[1]);
         const seconds = parseInt(match[2]);
         secondsRemaining = minutes * 60 + seconds;
-        
+
         if (minutes > 0) {
           timerDisplay = `${minutes}m ${seconds}s`;
         } else {
@@ -153,43 +154,43 @@ const findButton = async (page, texts) => {
 
     // Check restart conditions
     const shouldRestart = (
-      playerCount === 0 && 
-      secondsRemaining !== null && 
-      secondsRemaining <= 30 && 
+      playerCount === 0 &&
+      secondsRemaining !== null &&
+      secondsRemaining <= 30 &&
       secondsRemaining > 0
     );
 
     if (shouldRestart) {
       console.log(`\n🚨 AUTO-RESTART TRIGGERED! (${secondsRemaining}s bacha, 0 players)`);
-      
+
       // Try to find restart/start button
       const actionBtn = await findButton(page, ["restart", "start", "confirm"]);
-      
+
       if (actionBtn) {
         try {
           // Scroll button into view
           await page.evaluate(btn => {
             btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }, actionBtn);
-          
+
           await wait(500);
-          
+
           // Click the button
           await actionBtn.click();
           console.log("✅ Button clicked successfully!");
-          
+
           await wait(3000);
-          
+
           // Check for confirmation dialog
           const confirmBtn = await findButton(page, ["confirm", "yes", "ok", "restart"]);
           if (confirmBtn) {
             await confirmBtn.click();
             console.log("✅ Confirmation clicked!");
           }
-          
+
           console.log("⏳ Server restart ho raha hai...\n");
           await wait(15000);
-          
+
         } catch (error) {
           console.log("❌ Click error:", error.message);
         }
